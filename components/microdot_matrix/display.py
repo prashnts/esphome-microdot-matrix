@@ -10,6 +10,7 @@ DEPENDENCIES = ["i2c"]
 
 microdot_matrix = cg.esphome_ns.namespace("microdot_matrix")
 MicrodotMatrix = microdot_matrix.class_("MicrodotMatrix", cg.PollingComponent, display.DisplayBuffer, i2c.I2CDevice)
+MicrodotMatrixRef = MicrodotMatrix.operator("ref")
 
 CONFIG_SCHEMA = cv.All(
     display.FULL_DISPLAY_SCHEMA
@@ -32,7 +33,7 @@ async def to_code(config):
 
     if CONF_LAMBDA in config:
         lambda_ = await cg.process_lambda(
-            config[CONF_LAMBDA], [(display.DisplayBufferRef, "it")], return_type=cg.void
+            config[CONF_LAMBDA], [(MicrodotMatrixRef, "it")], return_type=cg.void
         )
         cg.add(var.set_writer(lambda_))
     await i2c.register_i2c_device(var, config)

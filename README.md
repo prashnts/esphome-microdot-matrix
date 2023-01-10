@@ -10,7 +10,13 @@ has a great API.
 
 ## Sources
 
-This repo is built from Pimoroni's original implementation. More detail to follow.
+This repo is built from Pimoroni's [original implementation][pimoroni_pico]. More detail to follow.
+
+### Notes
+- Based on [`max7219digit`][max7219] implementation, I discovered that we can have custom functions in lambdas.
+  This works by passing the `MicrodotMatrix` object to the lambda instead of just the `DisplayBuffer`.
+
+
 
 ## Usage
 
@@ -22,3 +28,5 @@ This repo is built from Pimoroni's original implementation. More detail to follo
 MIT.
 
 [matrix_url]: https://shop.pimoroni.com/products/led-dot-matrix-breakout?variant=32274405621843
+[max7219]: https://github.com/esphome/esphome/blob/ecac26aebaa7aa8c27f58be2fa6a1330f92bc92d/esphome/components/max7219digit/display.py
+[pimoroni_pico]: https://github.com/pimoroni/pimoroni-pico/blob/main/drivers/ltp305/ltp305.cpp

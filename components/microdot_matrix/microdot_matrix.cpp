@@ -56,11 +56,9 @@
 
 #define DEFAULT_MODE      0x18
 #define DEFAULT_REG_LE    0x17  // 35mA
-#define DEFAULT_BRIGHT    127
-#define MATRIX_1          0
-#define MATRIX_2          1
 
-#define MATRIX_MIDPT      5   // 0-4; 5-9
+#define MAX_BRIGHTNESS    127
+#define INIT_BRIGHTNESS   64
 
 namespace esphome {
 namespace microdot_matrix {
@@ -68,7 +66,7 @@ namespace microdot_matrix {
 static const char *const TAG = "microdot_matrix";
 
 void MicrodotMatrix::setup() {
-  ESP_LOGCONFIG(TAG, "Setting up I2C SSD1306...");
+  ESP_LOGCONFIG(TAG, "Setting up I2C MicrodotMatrix...");
 
   auto err = this->write(nullptr, 0);
   if (err != i2c::ERROR_OK) {
@@ -78,7 +76,7 @@ void MicrodotMatrix::setup() {
   }
 
   this->write_byte(ISSI_REG_CONFIG, DEFAULT_MODE);
-  this->write_byte(ISSI_REG_BRIGHT, DEFAULT_BRIGHT);
+  this->write_byte(ISSI_REG_BRIGHT, INIT_BRIGHTNESS);
   this->write_byte(ISSI_REG_LE, DEFAULT_REG_LE);
 
   for (uint8_t i=0; i < 8; i++) {
@@ -103,20 +101,40 @@ void HOT MicrodotMatrix::display() {
   this->write_byte(ISSI_REG_UPDATE, 0x01);
 }
 
+void MicrodotMatrix::dump_config() {
+  LOG_DISPLAY("", "MicrodotMatrix", this);
+  LOG_I2C_DEVICE(this);
+  LOG_UPDATE_INTERVAL(this);
+
+  if (this->error_code_ == COMMUNICATION_FAILED) {
+    ESP_LOGE(TAG, "Communication with MicrodotMatrix failed!");
+  }
+}
+
+void MicrodotMatrix::update() {
+  this->do_update_();
+  if (this->writer_local_.has_value()) { // insert Labda function if available
+    (*this->writer_local_)(*this);
+  }
+  this->display();
+}
+
 void HOT MicrodotMatrix::draw_absolute_pixel_internal(int x, int y, Color color) {
-  if (x >= this->get_width_internal() || y >= this->get_height_internal() || x < 0 || y < 0) {
+  if (x >= this->get_width_internal() ||
+      y >= this->get_height_internal() ||
+      x < 0 ||
+      y < 0) {
     return;
   }
 
-  // left
-
-  if (x < MATRIX_MIDPT) {
+  if (x < 5) {
+    // left matrix
     if (color.is_on())
       this->_buf_matrix_lt[x] |= (1 << y);
     else
       this->_buf_matrix_lt[x] &= ~(1 << y);
   } else {
-    x = x - MATRIX_MIDPT;
+    x = x - 5;
     if (color.is_on())
       this->_buf_matrix_rt[y] |= (1 << x);
     else
@@ -124,27 +142,23 @@ void HOT MicrodotMatrix::draw_absolute_pixel_internal(int x, int y, Color color)
   }
 }
 
-void MicrodotMatrix::dump_config() {
-  LOG_DISPLAY("", "MicrodotMatrix", this);
-  LOG_I2C_DEVICE(this);
-  LOG_UPDATE_INTERVAL(this);
-
-  if (this->error_code_ == COMMUNICATION_FAILED) {
-    ESP_LOGE(TAG, "Communication with IS31FL3730 failed!");
+void MicrodotMatrix::set_brightness(uint8_t value) {
+  if (value > MAX_BRIGHTNESS) {
+    value = MAX_BRIGHTNESS;
   }
+  this->write_byte(ISSI_REG_BRIGHT, value);
 }
 
-void MicrodotMatrix::update() {
-  this->do_update_();
-  this->display();
-}
+void MicrodotMatrix::set_decimal(bool left, bool right) {
+  if (left)
+    this->_buf_matrix_lt[7] |= 0b01000000;
+  else
+    this->_buf_matrix_lt[7] &= 0b10111111;
 
-void MicrodotMatrix::fill(Color color) {
-  uint8_t fill = color.is_on() ? 1 : 0;
-  for (uint8_t i=0; i < 8; i++) {
-      this->_buf_matrix_lt[i] = fill;
-      this->_buf_matrix_rt[i] = fill;
-  }
+  if (right)
+    this->_buf_matrix_rt[6] |= 0b10000000;
+  else
+    this->_buf_matrix_rt[6] &= 0b01111111;
 }
 
 }  // namespace microdot_matrix
