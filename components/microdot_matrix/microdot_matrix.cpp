@@ -61,8 +61,9 @@
 #define MAX_BRIGHTNESS    127
 #define INIT_BRIGHTNESS   64
 
-#define WIDTH   5
-#define HEIGHT  7
+#define WIDTH     5
+#define HEIGHT    7
+#define N_MATRIX  2
 
 namespace esphome {
 namespace microdot_matrix {
@@ -91,8 +92,8 @@ void MicrodotMatrix::setup() {
   this->init_internal_(this->get_buffer_length_());
 }
 
-int MicrodotMatrix::get_width_internal() { return 10; }
-int MicrodotMatrix::get_height_internal() { return 7; }
+int MicrodotMatrix::get_width_internal() { return WIDTH * N_MATRIX; }
+int MicrodotMatrix::get_height_internal() { return HEIGHT; }
 
 size_t MicrodotMatrix::get_buffer_length_() {
   return size_t(this->get_width_internal()) * size_t(this->get_height_internal());
@@ -131,14 +132,14 @@ void HOT MicrodotMatrix::draw_absolute_pixel_internal(int x, int y, Color color)
     return;
   }
 
-  if (x < 5) {
+  if (x < WIDTH) {
     // left matrix
     if (color.is_on())
       this->_buf_matrix_lt[x] |= (1 << y);
     else
       this->_buf_matrix_lt[x] &= ~(1 << y);
   } else {
-    x = x - 5;
+    x = x - WIDTH;
     if (color.is_on())
       this->_buf_matrix_rt[y] |= (1 << x);
     else
@@ -180,11 +181,12 @@ uint8_t MicrodotMatrix::printstrf(const char *format, ...) {
 
 uint8_t MicrodotMatrix::printstr(const char *s) {
   // for each character, we look it up in font map, and print it.
+  // after that, fill the remaining area with spaces.
   uint8_t pos = 0;  // current character pos.
-  for (; pos < 2 && *s; pos++)
+  for (; pos < N_MATRIX && *s; pos++)
     this->printchar(pos, *s++);
 
-  while (pos < 2)
+  while (pos < N_MATRIX)
     this->printchar(pos, ' ');
 
   return 0;
