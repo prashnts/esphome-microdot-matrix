@@ -1,4 +1,11 @@
 #pragma once
+/* Almost entirely copied from Pimoroni's Pico drivers.
+ * https://github.com/pimoroni/pimoroni-pico/blob/main/drivers/ltp305/dotfont.hpp
+ *
+ * CHANGES:
+ * - Namespace
+ * - [ ] Dotted/Slashed Zeros
+ */
 
 #include <cstdint>
 #include <map>
