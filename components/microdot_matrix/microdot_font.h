@@ -3,7 +3,8 @@
 #include <cstdint>
 #include <map>
 
-namespace pimoroni {
+namespace esphome {
+namespace microdot_matrix {
 
   static const uint8_t DOT_CHAR_WIDTH = 5;
 
@@ -402,4 +403,5 @@ namespace pimoroni {
     {65438, {0x02, 0x04, 0x01, 0x02, 0x00}},   // ﾞ
     {65439, {0x07, 0x05, 0x07, 0x00, 0x00}},   // ﾟ
   };
+}
 }

@@ -26,10 +26,14 @@ public:
   void HOT display();
   void update() override;
   void setup();
+  void init_brightness(uint8_t value) { this->_brightness = value; };
 
   void set_brightness(uint8_t value);
   void set_decimal(bool left, bool right);
+  void printchar(uint8_t pos, const char ch);
 
+  uint8_t printstrf(const char *format, ...);
+  uint8_t printstr(const char *s);
 protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
 
@@ -48,6 +52,7 @@ protected:
   // These hold the internal display buffer for left and right modules.
   uint8_t _buf_matrix_lt[8];
   uint8_t _buf_matrix_rt[8];
+  uint8_t _brightness{64};
 
   enum ErrorCode { NONE = 0, COMMUNICATION_FAILED } error_code_{NONE};
 

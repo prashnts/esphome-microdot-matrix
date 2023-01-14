@@ -3,6 +3,7 @@
 #include "esphome/core/helpers.h"
 
 #include "microdot_matrix.h"
+#include "microdot_font.h"
 
 /**
  * Display Layout:
@@ -60,6 +61,9 @@
 #define MAX_BRIGHTNESS    127
 #define INIT_BRIGHTNESS   64
 
+#define WIDTH   5
+#define HEIGHT  7
+
 namespace esphome {
 namespace microdot_matrix {
 
@@ -76,8 +80,8 @@ void MicrodotMatrix::setup() {
   }
 
   this->write_byte(ISSI_REG_CONFIG, DEFAULT_MODE);
-  this->write_byte(ISSI_REG_BRIGHT, INIT_BRIGHTNESS);
   this->write_byte(ISSI_REG_LE, DEFAULT_REG_LE);
+  set_brightness(this->_brightness);
 
   for (uint8_t i=0; i < 8; i++) {
       this->_buf_matrix_lt[i] = 0;
@@ -159,6 +163,51 @@ void MicrodotMatrix::set_decimal(bool left, bool right) {
     this->_buf_matrix_rt[6] |= 0b10000000;
   else
     this->_buf_matrix_rt[6] &= 0b01111111;
+}
+
+uint8_t MicrodotMatrix::printstrf(const char *format, ...) {
+  va_list arg;
+  va_start(arg, format);
+  char buffer[64];
+  int ret = vsnprintf(buffer, sizeof(buffer), format, arg);
+  va_end(arg);
+
+  if (ret > 0)
+    this->printstr(buffer);
+
+  return 0;
+}
+
+uint8_t MicrodotMatrix::printstr(const char *s) {
+  // for each character, we look it up in font map, and print it.
+  uint8_t pos = 0;  // current character pos.
+  for (; pos < 2 && *s; pos++)
+    this->printchar(pos, *s++);
+
+  while (pos < 2)
+    this->printchar(pos, ' ');
+
+  return 0;
+}
+
+void MicrodotMatrix::printchar(uint8_t pos, const char ch) {
+  // use the lookup table to print value.
+  std::map<uint16_t, DotChar>::const_iterator it = dotfont.find((uint16_t)ch);
+
+  if (it != dotfont.end()) {
+    DotChar dchar = it->second;
+    for (uint8_t x = 0; x < DOT_CHAR_WIDTH; x++) {
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+        uint8_t c = dchar.data[x] & (0b1 << y);
+        Color color;
+        if (c)
+          color = Color::WHITE;
+        else
+          color = Color::BLACK;
+        this->draw_absolute_pixel_internal((pos * WIDTH) + x, y, color);
+      }
+    }
+  }
 }
 
 }  // namespace microdot_matrix

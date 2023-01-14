@@ -3,7 +3,7 @@ import esphome.config_validation as cv
 
 from esphome.components import display
 from esphome.components import i2c
-from esphome.const import CONF_ID, CONF_LAMBDA, CONF_PAGES
+from esphome.const import CONF_ID, CONF_LAMBDA, CONF_PAGES, CONF_BRIGHTNESS
 
 
 DEPENDENCIES = ["i2c"]
@@ -18,6 +18,7 @@ CONFIG_SCHEMA = cv.All(
     .extend(
         {
             cv.GenerateID(): cv.declare_id(MicrodotMatrix),
+            cv.Optional(CONF_BRIGHTNESS, default=1.0): cv.int_range(min=0, max=127),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -36,4 +37,6 @@ async def to_code(config):
             config[CONF_LAMBDA], [(MicrodotMatrixRef, "it")], return_type=cg.void
         )
         cg.add(var.set_writer(lambda_))
+    if CONF_BRIGHTNESS in config:
+        cg.add(var.init_brightness(config[CONF_BRIGHTNESS]))
     await i2c.register_i2c_device(var, config)
