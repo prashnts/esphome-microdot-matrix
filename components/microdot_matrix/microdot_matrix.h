@@ -11,8 +11,7 @@ class MicrodotMatrix;
 
 using microdot_writer_t = std::function<void(MicrodotMatrix &)>;
 
-class MicrodotMatrix: public PollingComponent,
-                      public display::DisplayBuffer,
+class MicrodotMatrix: public display::DisplayBuffer,
                       public i2c::I2CDevice {
 public:
   void set_writer(microdot_writer_t &&writer) { this->writer_local_ = writer; };

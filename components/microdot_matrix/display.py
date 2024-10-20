@@ -9,7 +9,7 @@ from esphome.const import CONF_ID, CONF_LAMBDA, CONF_PAGES, CONF_BRIGHTNESS
 DEPENDENCIES = ["i2c"]
 
 microdot_matrix = cg.esphome_ns.namespace("microdot_matrix")
-MicrodotMatrix = microdot_matrix.class_("MicrodotMatrix", cg.PollingComponent, display.DisplayBuffer, i2c.I2CDevice)
+MicrodotMatrix = microdot_matrix.class_("MicrodotMatrix", display.DisplayBuffer, i2c.I2CDevice)
 MicrodotMatrixRef = MicrodotMatrix.operator("ref")
 
 CONFIG_SCHEMA = cv.All(
@@ -29,7 +29,6 @@ CONFIG_SCHEMA = cv.All(
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
-    await cg.register_component(var, config)
     await display.register_display(var, config)
 
     if CONF_LAMBDA in config:
